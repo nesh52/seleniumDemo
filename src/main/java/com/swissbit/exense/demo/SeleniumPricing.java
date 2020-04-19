@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SeleniumPricing extends AbstractKeyword {
-    final List<String> defaultOptions = Arrays.asList(new String[]{"disable-infobars", "ignore-certificate-errors"});
-    final List<String> headlessOptions = Arrays.asList(new String[]{"headless", "disable-gpu", "no-sandbox"});
 
     @Keyword(name = "Open Chrome")
     public void openChrome() throws Exception {
