@@ -6,6 +6,8 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import step.grid.io.Attachment;
 import step.grid.io.AttachmentHelper;
 import step.handlers.javahandler.AbstractKeyword;
@@ -62,7 +64,8 @@ public class SeleniumPricing extends AbstractKeyword {
         String userId = "pills-ep" + volume + "-tab";
         String valueDivId = "pills-ep" + volume;
         driver.findElement(By.id(userId)).click();
-        Thread.sleep(1_000);
+        WebDriverWait wait = new WebDriverWait(driver,30);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='" + valueDivId + "']/div/span[@class=\"centered-img price enterprise-premium-color\"]")));
         String value = driver.findElement(By.xpath("//div[@id='" + valueDivId + "']/div/span[@class=\"centered-img price enterprise-premium-color\"]")).getText();
         output.add("licenseValue", value);
         output.add("title", driver.getTitle());
