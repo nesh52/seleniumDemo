@@ -9,6 +9,7 @@ import step.handlers.javahandler.KeywordRunner;
 import step.handlers.javahandler.KeywordRunner.ExecutionContext;
 
 import javax.json.Json;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,30 +35,44 @@ public class TestSeleniumPricing {
         Assert.assertEquals("step", title);
 
         ctx.run("Go to pricing");
-        ctx.run("Select premium number of users", Json.createObjectBuilder()
-                .add("nrOfUsers", "31-60")
-                .build()
-                .toString()
-        );
-        ctx.run("Go to Contact");
-        ctx.run("Fill the contact form", Json.createObjectBuilder()
-                .add("firstName", "n1")
-                .add("lastName", "n2")
-                .add("email", "n3")
-                .add("message", "n4")
-                .build()
-                .toString()
-        );
-        ctx.run("Go to home using logo");
-        ctx.run("Go to contact using footer");
-        ctx.run("Fill the contact form", Json.createObjectBuilder()
-                .add("firstName", "d1")
-                .add("lastName", "d2")
-                .add("email", "d3")
-                .add("message", "d4")
-                .build()
-                .toString()
-        );
+
+        ArrayList<String> userVolume = new ArrayList<>();
+        userVolume.add("min");
+        userVolume.add("low");
+        userVolume.add("mid");
+        userVolume.add("max");
+
+
+        for (String vol : userVolume) {
+            String value = ctx.run("Select premium number of users", Json.createObjectBuilder()
+                    .add("volume", vol)
+                    .build()
+                    .toString()
+            ).getPayload().getString("licenseValue");
+
+            System.out.println("Volume: " + vol + " Value: " + value);
+
+        }
+
+//        ctx.run("Go to Contact");
+//        ctx.run("Fill the contact form", Json.createObjectBuilder()
+//                .add("firstName", "n1")
+//                .add("lastName", "n2")
+//                .add("email", "n3")
+//                .add("message", "n4")
+//                .build()
+//                .toString()
+//        );
+//        ctx.run("Go to home using logo");
+//        ctx.run("Go to contact using footer");
+//        ctx.run("Fill the contact form", Json.createObjectBuilder()
+//                .add("firstName", "d1")
+//                .add("lastName", "d2")
+//                .add("email", "d3")
+//                .add("message", "d4")
+//                .build()
+//                .toString()
+//        );
     }
 
     @After
