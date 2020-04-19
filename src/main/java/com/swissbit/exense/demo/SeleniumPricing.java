@@ -88,6 +88,8 @@ public class SeleniumPricing extends AbstractKeyword {
         String email = input.getString("email");
         String message = input.getString("message");
 
+        cleanContactForm(driver);
+
         driver.findElement(By.id("id_first_name")).sendKeys(firstName);
         driver.findElement(By.id("id_last_name")).sendKeys(lastName);
         driver.findElement(By.id("id_email")).sendKeys(email);
@@ -138,5 +140,12 @@ public class SeleniumPricing extends AbstractKeyword {
         public void close() throws IOException {
             driver.quit();
         }
+    }
+
+    private void cleanContactForm(WebDriver driver) {
+        driver.findElement(By.id("id_first_name")).clear();
+        driver.findElement(By.id("id_last_name")).clear();
+        driver.findElement(By.id("id_email")).clear();
+        driver.findElement(By.id("id_message")).clear();
     }
 }
