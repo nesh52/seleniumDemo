@@ -58,15 +58,14 @@ public class SeleniumPricing extends AbstractKeyword {
     @Keyword(name = "Select premium number of users")
     public void selectPremiumNrOfUsers() throws InterruptedException {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-//        String nrOfUsers = input.getString("nrOfUsers"); // 1-15; 16-30; 31-60; >60
-//        driver.findElement(By.linkText(nrOfUsers)).click();
         String volume = input.getString("volume");
         String userId = "pills-ep" + volume + "-tab";
         String valueDivId = "pills-ep" + volume;
+        String licensePriceXPath = "//div[@id='" + valueDivId + "']/div/span[@class=\"centered-img price enterprise-premium-color\"]";
         driver.findElement(By.id(userId)).click();
         WebDriverWait wait = new WebDriverWait(driver,30);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='" + valueDivId + "']/div/span[@class=\"centered-img price enterprise-premium-color\"]")));
-        String value = driver.findElement(By.xpath("//div[@id='" + valueDivId + "']/div/span[@class=\"centered-img price enterprise-premium-color\"]")).getText();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(licensePriceXPath)));
+        String value = driver.findElement(By.xpath(licensePriceXPath)).getText();
         output.add("licenseValue", value);
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
