@@ -1,38 +1,22 @@
 package com.swissbit.exense.demo;
 
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import step.grid.io.Attachment;
+import step.grid.io.AttachmentHelper;
+import step.handlers.javahandler.AbstractKeyword;
+import step.handlers.javahandler.Keyword;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-
-//import step.examples.selenium.SeleniumKeywordExample.DriverWrapper;
-import step.grid.io.Attachment;
-import step.grid.io.AttachmentHelper;
-import step.handlers.javahandler.AbstractKeyword;
-import step.handlers.javahandler.Keyword;
-
 public class SeleniumPricing extends AbstractKeyword {
     final List<String> defaultOptions = Arrays.asList(new String[]{"disable-infobars", "ignore-certificate-errors"});
     final List<String> headlessOptions = Arrays.asList(new String[]{"headless", "disable-gpu", "no-sandbox"});
-
-
-    @Keyword
-    public void testMe() {
-        String foo = input.getString("url");
-
-        output.add("url", foo);
-    }
-
 
     @Keyword(name = "Open Chrome")
     public void openChrome() throws Exception {
@@ -62,95 +46,66 @@ public class SeleniumPricing extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.get(url);
         output.add("rethink", driver.findElement(By.xpath("//h1[text() = 'Rethink automation.']")).getText());
+        attachScreenshot(driver);
     }
 
     @Keyword(name = "Go to pricing")
     public void goToPricing() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.linkText("Pricing")).click();
+        output.add("pricing", driver.findElement(By.xpath("//h2[text() = 'Pricing']")).getText());
         attachScreenshot(driver);
     }
 
     @Keyword(name = "Select premium number of users")
-    public void selectPremium() {
+    public void selectPremiumNrOfUsers() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-
-        // 1-15; 16-30; 31-60; >60
-        driver.findElement(By.linkText("31-60")).click();
-
+        String nrOfUsers = input.getString("nrOfUsers"); // 1-15; 16-30; 31-60; >60
+        driver.findElement(By.linkText(nrOfUsers)).click();
         String value = driver.findElement(By.xpath("//div[@class=\"tab-pane fade active show\"]/div/span[@class=\"centered-img price enterprise-premium-color\"]")).getText();
-
-        System.out.println("value = " + value);
-
-//		WebElement price = driver.findElement(By.xpath(
-//                "//span[contains(@class,'centered-img price enterprise-premium-color')]"));
-//
-//		output.add(price.getText(), price.findElement(By.tagName("span")).getText());
-
-
+        output.add("licenseValue", value);
         attachScreenshot(driver);
     }
 
 
     @Keyword(name = "Go to Contact")
     public void goToContact() throws Exception {
-
         WebDriver driver = session.get(DriverWrapper.class).driver;
-
-        driver.get("https://step.exense.ch");
-
-        //WebElement searchLink;
         driver.findElement(By.partialLinkText("ontact")).click();
-
-
-        WebElement userNameElement = driver.findElement(By.id("id_first_name"));
-        userNameElement.sendKeys("User");
-
-        WebElement lastNameElement = driver.findElement(By.id("id_last_name"));
-        lastNameElement.sendKeys("Usera");
-
-        WebElement emailElement = driver.findElement(By.id("id_email"));
-        emailElement.sendKeys("User@user.com");
-
-
-        WebElement messageElement = driver.findElement(By.id("id_message"));
-        messageElement.sendKeys("Some text goes here ....");
-
+        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Pricing']")).getText());
         attachScreenshot(driver);
-
-        //home by logo
-        driver.findElement(By.xpath("//a[@class='navbar-brand']")).click();
-        attachScreenshot(driver);
-
-
     }
 
-    @Keyword(name = "Contact from footer")
-    public void contactFromFooter() throws Exception {
 
+    @Keyword(name = "Fill the contact form")
+    public void fillContactForm() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
+        String firstName = input.getString("firstName");
+        String lastName = input.getString("lastName");
+        String email = input.getString("email");
+        String message = input.getString("message");
 
-        driver.get("https://step.exense.ch");
-
-        driver.findElement(By.xpath("//footer[@class='footer']"))
-                .findElement(By.xpath("//a[@class='btn btn-info']")).click();
-
-        WebElement userNameElement = driver.findElement(By.id("id_first_name"));
-        userNameElement.sendKeys("User");
-
-        WebElement lastNameElement = driver.findElement(By.id("id_last_name"));
-        lastNameElement.sendKeys("Usera");
-
-        WebElement emailElement = driver.findElement(By.id("id_email"));
-        emailElement.sendKeys("User@user.com");
+        driver.findElement(By.id("id_first_name")).sendKeys(firstName);
+        driver.findElement(By.id("id_last_name")).sendKeys(lastName);
+        driver.findElement(By.id("id_email")).sendKeys(email);
+        driver.findElement(By.id("id_message")).sendKeys(message);
+    }
 
 
-        WebElement messageElement = driver.findElement(By.id("id_message"));
-        messageElement.sendKeys("Some text goes here ....");
-
+    @Keyword(name = "Go to home using logo")
+    public void goToHomeUsingLogo() {
+        WebDriver driver = session.get(DriverWrapper.class).driver;
+        driver.findElement(By.xpath("//a[@class='navbar-brand']")).click();
+        output.add("rethink", driver.findElement(By.xpath("//h1[text() = 'Rethink automation.']")).getText());
         attachScreenshot(driver);
+    }
 
-
+    @Keyword(name = "Go to contact using footer")
+    public void goToContactUsingFooter() {
+        WebDriver driver = session.get(DriverWrapper.class).driver;
+        driver.findElement(By.xpath("//footer[@class='footer']")).findElement(By.xpath("//a[@class='btn btn-info']")).click();
+        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Pricing']")).getText());
+        attachScreenshot(driver);
     }
 
     public void attachScreenshot(WebDriver driver) {

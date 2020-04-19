@@ -31,6 +31,12 @@ public class TestSeleniumPricing {
                 .build()
                 .toString()
         );
+        ctx.run("Go to pricing");
+        ctx.run("Select premium number of users", Json.createObjectBuilder()
+                .add("nrOfUsers", "31-60")
+                .build()
+                .toString()
+        );
 //        ctx.run("Go to site", "{\"url\":\"step.exense.ch\"}");
 //        ctx.run("Go to pricing");
 //        ctx.run("Select premium number of users");
