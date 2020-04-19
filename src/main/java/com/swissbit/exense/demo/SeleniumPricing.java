@@ -35,12 +35,12 @@ public class SeleniumPricing extends AbstractKeyword {
         session.put(new DriverWrapper(driver));
     }
 
-    @Keyword
+    @Keyword(name = "Go to site")
     public void goToSite() {
         String url = input.getString("url");
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.get(url);
-        output.add("rethink", driver.findElement(By.xpath("//h1[text() = 'Rethink automation.']")).getText());
+        output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -48,7 +48,8 @@ public class SeleniumPricing extends AbstractKeyword {
     public void goToPricing() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.linkText("Pricing")).click();
-        output.add("pricing", driver.findElement(By.xpath("//h2[text() = 'Pricing']")).getText());
+        output.add("title", driver.getTitle());
+        output.add("secHeader", getSectionHeader(driver));
         attachScreenshot(driver);
     }
 
@@ -59,6 +60,7 @@ public class SeleniumPricing extends AbstractKeyword {
         driver.findElement(By.linkText(nrOfUsers)).click();
         String value = driver.findElement(By.xpath("//div[@class=\"tab-pane fade active show\"]/div/span[@class=\"centered-img price enterprise-premium-color\"]")).getText();
         output.add("licenseValue", value);
+        output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -66,7 +68,8 @@ public class SeleniumPricing extends AbstractKeyword {
     public void goToContact() throws Exception {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.partialLinkText("ontact")).click();
-        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Contact']")).getText());
+        output.add("title", driver.getTitle());
+        output.add("secHeader", getSectionHeader(driver));
         attachScreenshot(driver);
     }
 
@@ -82,6 +85,7 @@ public class SeleniumPricing extends AbstractKeyword {
         driver.findElement(By.id("id_last_name")).sendKeys(lastName);
         driver.findElement(By.id("id_email")).sendKeys(email);
         driver.findElement(By.id("id_message")).sendKeys(message);
+        output.add("title", driver.getTitle());
     }
 
     @Keyword(name = "Go to home using logo")
@@ -89,6 +93,7 @@ public class SeleniumPricing extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//a[@class='navbar-brand']")).click();
         output.add("rethink", driver.findElement(By.xpath("//h1[text() = 'Rethink automation.']")).getText());
+        output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -96,7 +101,8 @@ public class SeleniumPricing extends AbstractKeyword {
     public void goToContactUsingFooter() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//footer[@class='footer']")).findElement(By.xpath("//a[@class='btn btn-info']")).click();
-        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Contact']")).getText());
+        output.add("title", driver.getTitle());
+        output.add("secHeader", getSectionHeader(driver));
         attachScreenshot(driver);
     }
 
@@ -110,15 +116,17 @@ public class SeleniumPricing extends AbstractKeyword {
         }
     }
 
+    private String getSectionHeader(WebDriver driver) {
+        return driver.findElement(By.xpath("//section[@class='middle']/header/h2")).getText();
+    }
+
+
     public class DriverWrapper implements Closeable {
-
         final WebDriver driver;
-
         public DriverWrapper(WebDriver driver) {
             super();
             this.driver = driver;
         }
-
         @Override
         public void close() throws IOException {
             driver.quit();

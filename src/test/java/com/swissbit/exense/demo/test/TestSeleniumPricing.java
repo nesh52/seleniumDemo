@@ -2,6 +2,7 @@ package com.swissbit.exense.demo.test;
 
 import com.swissbit.exense.demo.SeleniumPricing;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import step.handlers.javahandler.KeywordRunner;
@@ -24,11 +25,14 @@ public class TestSeleniumPricing {
     @Test
     public void test() throws Exception {
         ctx.run("Open Chrome");
-        ctx.run("goToSite", Json.createObjectBuilder()
+        String title = ctx.run("Go to site", Json.createObjectBuilder()
                 .add("url", "https://step.exense.ch")
                 .build()
                 .toString()
-        );
+        ).getPayload().getString("title");
+        System.out.println(title);
+        Assert.assertEquals("step", title);
+
         ctx.run("Go to pricing");
         ctx.run("Select premium number of users", Json.createObjectBuilder()
                 .add("nrOfUsers", "31-60")
