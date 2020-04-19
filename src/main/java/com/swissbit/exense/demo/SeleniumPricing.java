@@ -1,6 +1,9 @@
 package com.swissbit.exense.demo;
 
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import step.grid.io.Attachment;
@@ -11,18 +14,13 @@ import step.handlers.javahandler.Keyword;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class SeleniumPricing extends AbstractKeyword {
-
     @Keyword(name = "Open Chrome")
-    public void openChrome() throws Exception {
-
+    public void openChrome() {
         ChromeOptions options = new ChromeOptions();
-
         options.addArguments(Arrays.asList("disable-infobars"));
-
         boolean headless = input.getBoolean("headless", false);
         if (headless) {
             options.addArguments(Arrays.asList("headless", "disable-gpu"));
@@ -31,12 +29,11 @@ public class SeleniumPricing extends AbstractKeyword {
         if (!sandbox) {
             options.addArguments(Arrays.asList("no-sandbox"));
         }
-
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        driver.manage().window().maximize();
         session.put(new DriverWrapper(driver));
     }
-
 
     @Keyword
     public void goToSite() {
@@ -65,15 +62,13 @@ public class SeleniumPricing extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-
     @Keyword(name = "Go to Contact")
     public void goToContact() throws Exception {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.partialLinkText("ontact")).click();
-        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Pricing']")).getText());
+        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Contact']")).getText());
         attachScreenshot(driver);
     }
-
 
     @Keyword(name = "Fill the contact form")
     public void fillContactForm() {
@@ -89,7 +84,6 @@ public class SeleniumPricing extends AbstractKeyword {
         driver.findElement(By.id("id_message")).sendKeys(message);
     }
 
-
     @Keyword(name = "Go to home using logo")
     public void goToHomeUsingLogo() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
@@ -102,7 +96,7 @@ public class SeleniumPricing extends AbstractKeyword {
     public void goToContactUsingFooter() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//footer[@class='footer']")).findElement(By.xpath("//a[@class='btn btn-info']")).click();
-        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Pricing']")).getText());
+        output.add("contact", driver.findElement(By.xpath("//h2[text() = 'Contact']")).getText());
         attachScreenshot(driver);
     }
 
@@ -115,11 +109,6 @@ public class SeleniumPricing extends AbstractKeyword {
             output.appendError("Unable to generate screenshot");
         }
     }
-
-    private void setDriver(WebDriver driver) {
-        this.session.put("DriverWrapper", new DriverWrapper(driver));
-    }
-
 
     public class DriverWrapper implements Closeable {
 
