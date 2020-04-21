@@ -66,7 +66,6 @@ public class TestDummyPlanExecution {
         System.out.println("lastExecId: " + lastExecId);
         Assert.assertEquals(executionId, lastExecId);
 
-
         JsonObject execStatus = ctx.run("Wait for execution to end", Json.createObjectBuilder()
                 .add("pollMaxTries", 30)
                 .add("pollIntervalMilliseconds", 5000)

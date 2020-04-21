@@ -74,10 +74,6 @@ public class DummyPlanExecution extends AbstractKeyword {
         String planType = input.getString("planType");
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//button[text()='New plan']")).click();
-
-        WebDriverWait wait = new WebDriverWait(driver, 30);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//h3[text()='New plan']")));
-
         driver.findElement(By.id("attributes.name")).sendKeys(planName);
         Select newPlanTypeDropdowns = new Select(driver.findElement(By.xpath("//select[@ng-model='artefacttype']")));
         newPlanTypeDropdowns.selectByVisibleText(planType);
@@ -106,7 +102,6 @@ public class DummyPlanExecution extends AbstractKeyword {
     public void closeCurrentExecutionTab() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//li[@class='ng-scope active']/a/i[@ng-click='closeTab(tab.id)']")).click();
-
         String lastExecutionHref = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td/a")).getAttribute("href");
         output.add("lastExecutionId", lastExecutionHref.substring(lastExecutionHref.lastIndexOf('/') + 1));
         output.add("title", driver.getTitle());
@@ -120,11 +115,11 @@ public class DummyPlanExecution extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         for (int i = 1; i <= pollMaxTries; i++) {
             Thread.sleep(pollIntervalMilliseconds);
-            String status = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td/span[contains(@class, 'executionStatus')]")).getText();
+            WebElement lastExecution = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]"));
+            String status = lastExecution.findElement(By.xpath("./td/span[contains(@class, 'executionStatus')]")).getText();
             if (status.equals("ENDED")) {
-                String statusDistributionStr = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td//status-distribution/div")).getAttribute("uib-tooltip");
-                String patternString = ": (\\d+)";
-                Pattern pattern = Pattern.compile(patternString);
+                String statusDistributionStr = lastExecution.findElement(By.xpath("./td//status-distribution/div")).getAttribute("uib-tooltip");
+                Pattern pattern = Pattern.compile(": (\\d+)");
                 Matcher matcher = pattern.matcher(statusDistributionStr);
                 ArrayList<String> results = new ArrayList<>();
                 while (matcher.find()) {
@@ -136,7 +131,7 @@ public class DummyPlanExecution extends AbstractKeyword {
                 break;
             }
             if (i == 30) {
-                output.setBusinessError("execution is not finished after polling " + pollMaxTries + " times and interval " + pollIntervalMilliseconds);
+                output.setBusinessError("execution is not finished after polling " + pollMaxTries + " times and interval " + pollIntervalMilliseconds + " milliseconds");
             }
         }
         output.add("title", driver.getTitle());
