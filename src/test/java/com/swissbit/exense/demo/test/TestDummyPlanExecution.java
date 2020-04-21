@@ -43,8 +43,7 @@ public class TestDummyPlanExecution {
 
         String titleAfterCreate = ctx.run("Create plan", Json.createObjectBuilder()
                 .add("planName", "dummy1")
-//                .add("planType", "TestScenario")
-                .add("planType", "Sequence")
+                .add("planType", "Sequence") // "Sequence", "TestScenario", "Echo"
                 .build()
                 .toString()
         ).getPayload().getString("title");
@@ -67,30 +66,34 @@ public class TestDummyPlanExecution {
         Assert.assertEquals(executionId, lastExecId);
 
         JsonObject execStatus = ctx.run("Wait for execution to end", Json.createObjectBuilder()
-                .add("pollMaxTries", 30)
-                .add("pollIntervalMilliseconds", 5000)
+                .add("pollMaxTries", 300)
+                .add("pollIntervalMilliseconds", 2000)
                 .build()
                 .toString()
         ).getPayload();
-        String pass = execStatus.getString("passed");
-        String fail = execStatus.getString("failed");
-        String error = execStatus.getString("technicalError");
+        int pass = execStatus.getInt("passed");
+        int fail = execStatus.getInt("failed");
+        int error = execStatus.getInt("technicalError");
         System.out.println("pass: " + pass);
         System.out.println("fail: " + fail);
         System.out.println("error: " + error);
+        Assert.assertEquals(0, pass);
+        Assert.assertEquals(0, fail);
+        Assert.assertEquals(0, error);
 
-        String titleAfterPlans = ctx.run("Go to plans", Json.createObjectBuilder()
+        JsonObject plansGrid = ctx.run("Go to plans", Json.createObjectBuilder()
                         .build()
                         .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", titleAfterPlans);
+        ).getPayload();
+        Assert.assertEquals("STEP", plansGrid.getString("title"));
+        System.out.println("list of plan names: " + plansGrid.getString("plans"));
 
         String plansAfterRemove = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
                         .add("artifactId", artifactId)
                         .build()
                         .toString()
         ).getPayload().getString("plans");
-        System.out.println(plansAfterRemove);
+        System.out.println("plan names after remove: " + plansAfterRemove);
 
         String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
                 .build()

@@ -121,9 +121,9 @@ public class DummyPlanExecution extends AbstractKeyword {
                 String statusDistributionStr = lastExecution.findElement(By.xpath("./td//status-distribution/div")).getAttribute("uib-tooltip");
                 Pattern pattern = Pattern.compile(": (\\d+)");
                 Matcher matcher = pattern.matcher(statusDistributionStr);
-                ArrayList<String> results = new ArrayList<>();
+                ArrayList<Integer> results = new ArrayList<>();
                 while (matcher.find()) {
-                    results.add(matcher.group(1));
+                    results.add(Integer.valueOf(matcher.group(1)));
                 }
                 output.add("passed", results.get(0));
                 output.add("failed", results.get(1));
