@@ -24,7 +24,12 @@ public class TestDummyPlanExecution {
 
     @Test
     public void test() throws Exception {
-        ctx.run("Open Chrome");
+        ctx.run("Open Chrome", Json.createObjectBuilder()
+//                .add("proxyHost", "127.0.0.1")
+//                .add("proxyPort", 8888)
+                .build()
+                .toString()
+        );
 
         String lendingTitle = ctx.run("Go to STEP", Json.createObjectBuilder()
                 .add("url", "https://step-public-demo.stepcloud.ch")

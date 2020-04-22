@@ -3,6 +3,7 @@ package com.swissbit.exense.demo;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.CommandExecutor;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -15,7 +16,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,7 +26,7 @@ public class DummyPlanExecution extends AbstractKeyword {
     @Keyword(name = "Open Chrome")
     public void openChrome() {
         ChromeOptions options = new ChromeOptions();
-        options.addArguments(Arrays.asList("disable-infobars"));
+        options.addArguments(Arrays.asList("disable-infobars", "start-maximized"));
         boolean headless = input.getBoolean("headless", false);
         if (headless) {
             options.addArguments(Arrays.asList("headless", "disable-gpu"));
@@ -35,9 +35,15 @@ public class DummyPlanExecution extends AbstractKeyword {
         if (!sandbox) {
             options.addArguments(Arrays.asList("no-sandbox"));
         }
+        if (input.containsKey("proxyHost") && input.containsKey("proxyPort")) {
+            String proxyHost = input.getString("proxyHost");
+            int proxyPort = input.getInt("proxyPort");
+            Proxy proxy = new Proxy();
+            proxy.setHttpProxy(proxyHost + ":" + proxyPort);
+            options.setCapability("proxy", proxy);
+        }
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-        driver.manage().window().maximize();
         session.put(new DriverWrapper(driver));
     }
 
