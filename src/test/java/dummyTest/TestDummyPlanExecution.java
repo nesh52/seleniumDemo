@@ -23,24 +23,24 @@ public class TestDummyPlanExecution {
 
     @Test
     public void test() throws Exception {
-        ctx.run("Open Chrome");
+        ctx.run("Open Chrome v13");
 
-        String lendingTitle = ctx.run("Go to STEP", Json.createObjectBuilder()
-                .add("url", "https://step-public-demo.stepcloud.ch")
+        String lendingTitle = ctx.run("Go to STEP v13", Json.createObjectBuilder()
+                .add("url", "http://localhost:8080")
                 .build()
                 .toString()
         ).getPayload().getString("title");
         Assert.assertEquals("STEP", lendingTitle);
 
-        String loginTitle = ctx.run("Login to STEP", Json.createObjectBuilder()
-                .add("username", "admin")
-                .add("password", "public")
-                .build()
-                .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", loginTitle);
+//        String loginTitle = ctx.run("Login to STEP", Json.createObjectBuilder()
+//                .add("username", "admin")
+//                .add("password", "public")
+//                .build()
+//                .toString()
+//        ).getPayload().getString("title");
+//        Assert.assertEquals("STEP", loginTitle);
 
-        String titleAfterCreate = ctx.run("Create plan", Json.createObjectBuilder()
+        String titleAfterCreate = ctx.run("Create plan v13", Json.createObjectBuilder()
                 .add("planName", "dummy1")
                 .add("planType", "Sequence") // "Sequence", "TestScenario", "Echo"
                 .build()
@@ -48,7 +48,7 @@ public class TestDummyPlanExecution {
         ).getPayload().getString("title");
         Assert.assertEquals("STEP", titleAfterCreate);
 
-        JsonObject planDetails = ctx.run("Run plan", Json.createObjectBuilder()
+        JsonObject planDetails = ctx.run("Run plan v13", Json.createObjectBuilder()
                 .build()
                 .toString()
         ).getPayload();
@@ -57,14 +57,14 @@ public class TestDummyPlanExecution {
         System.out.println("executionId: " + executionId);
         System.out.println("artifactId: " + artifactId);
 
-        String lastExecId = ctx.run("Close current execution tab", Json.createObjectBuilder()
+        String lastExecId = ctx.run("Close current execution tab v13", Json.createObjectBuilder()
                 .build()
                 .toString()
         ).getPayload().getString("lastExecutionId");
         System.out.println("lastExecId: " + lastExecId);
         Assert.assertEquals(executionId, lastExecId);
 
-        JsonObject execStatus = ctx.run("Wait for execution to end", Json.createObjectBuilder()
+        JsonObject execStatus = ctx.run("Wait for execution to end v13", Json.createObjectBuilder()
                 .add("pollMaxTries", 300)
                 .add("pollIntervalMilliseconds", 2000)
                 .build()
@@ -80,25 +80,25 @@ public class TestDummyPlanExecution {
         Assert.assertEquals(0, fail);
         Assert.assertEquals(0, error);
 
-        JsonObject plansGrid = ctx.run("Go to plans", Json.createObjectBuilder()
+        JsonObject plansGrid = ctx.run("Go to plans v13", Json.createObjectBuilder()
                 .build()
                 .toString()
         ).getPayload();
         Assert.assertEquals("STEP", plansGrid.getString("title"));
         System.out.println("list of plan names: " + plansGrid.getString("plans"));
 
-        String plansAfterRemove = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
+        String plansAfterRemove = ctx.run("Remove plan by artifact id v13", Json.createObjectBuilder()
                 .add("artifactId", artifactId)
                 .build()
                 .toString()
         ).getPayload().getString("plans");
         System.out.println("plan names after remove: " + plansAfterRemove);
 
-        String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
-                .build()
-                .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", logoutTitle);
+//        String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
+//                .build()
+//                .toString()
+//        ).getPayload().getString("title");
+//        Assert.assertEquals("STEP", logoutTitle);
     }
 
     @After

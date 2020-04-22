@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class DummyPlanExecution extends AbstractKeyword {
 
-    @Keyword(name = "Open Chrome")
+    @Keyword(name = "Open Chrome v13")
     public void openChrome() {
         ChromeOptions options = new ChromeOptions();
         options.addArguments(Arrays.asList("disable-infobars"));
@@ -41,7 +41,7 @@ public class DummyPlanExecution extends AbstractKeyword {
         session.put(new DriverWrapper(driver));
     }
 
-    @Keyword(name = "Go to STEP")
+    @Keyword(name = "Go to STEP v13")
     public void goToSTEP() {
         String url = input.getString("url");
         WebDriver driver = session.get(DriverWrapper.class).driver;
@@ -50,32 +50,36 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Login to STEP")
-    public void loginToSTEP() {
-        String username = input.getString("username");
-        String password = input.getString("password");
-        WebDriver driver = session.get(DriverWrapper.class).driver;
+//    @Keyword(name = "Login to STEP")
+//    public void loginToSTEP() {
+//        String username = input.getString("username");
+//        String password = input.getString("password");
+//        WebDriver driver = session.get(DriverWrapper.class).driver;
+//
+//        WebElement inputUsername = driver.findElement(By.name("username"));
+//        WebElement inputPassword = driver.findElement(By.name("password"));
+//        inputUsername.clear();
+//        inputUsername.sendKeys(username);
+//        inputPassword.clear();
+//        inputPassword.sendKeys(password);
+//        driver.findElement(By.xpath("//button[@type='submit']")).click();
+//
+//        output.add("title", driver.getTitle());
+//        attachScreenshot(driver);
+//    }
 
-        WebElement inputUsername = driver.findElement(By.name("username"));
-        WebElement inputPassword = driver.findElement(By.name("password"));
-        inputUsername.clear();
-        inputUsername.sendKeys(username);
-        inputPassword.clear();
-        inputPassword.sendKeys(password);
-        driver.findElement(By.xpath("//button[@type='submit']")).click();
-
-        output.add("title", driver.getTitle());
-        attachScreenshot(driver);
-    }
-
-    @Keyword(name = "Create plan")
+    @Keyword(name = "Create plan v13")
     public void createPlan() {
         String planName = input.getString("planName");
         String planType = input.getString("planType");
         WebDriver driver = session.get(DriverWrapper.class).driver;
+
+        WebDriverWait wait = new WebDriverWait(driver,30);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//button[text()='New plan']")));
+
         driver.findElement(By.xpath("//button[text()='New plan']")).click();
-        driver.findElement(By.id("attributes.name")).sendKeys(planName);
-        Select newPlanTypeDropdowns = new Select(driver.findElement(By.xpath("//select[@ng-model='artefacttype']")));
+        driver.findElement(By.xpath("//input[@ng-if=\"input.type=='TEXT'\"]")).sendKeys(planName); //changed
+        Select newPlanTypeDropdowns = new Select(driver.findElement(By.xpath("//select[@ng-model='template']"))); //changed
         newPlanTypeDropdowns.selectByVisibleText(planType);
         driver.findElement(By.xpath("//div[@class='modal-footer ng-scope']/button[text()='Save and edit']")).click();
 
@@ -83,7 +87,7 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Run plan")
+    @Keyword(name = "Run plan v13")
     public void runPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//button[@title='Execute this plan']")).click();
@@ -98,17 +102,17 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Close current execution tab")
+    @Keyword(name = "Close current execution tab v13")
     public void closeCurrentExecutionTab() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//li[@class='ng-scope active']/a/i[@ng-click='closeTab(tab.id)']")).click();
-        String lastExecutionHref = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td/a")).getAttribute("href");
+        String lastExecutionHref = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td//a")).getAttribute("href");
         output.add("lastExecutionId", lastExecutionHref.substring(lastExecutionHref.lastIndexOf('/') + 1));
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Wait for execution to end")
+    @Keyword(name = "Wait for execution to end v13")
     public void waitForExecutionToEnd() throws InterruptedException {
         int pollMaxTries = input.getInt("pollMaxTries", 30);
         int pollIntervalMilliseconds = input.getInt("pollIntervalMilliseconds", 5000);
@@ -116,7 +120,7 @@ public class DummyPlanExecution extends AbstractKeyword {
         for (int i = 1; i <= pollMaxTries; i++) {
             Thread.sleep(pollIntervalMilliseconds);
             WebElement lastExecution = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]"));
-            String status = lastExecution.findElement(By.xpath("./td/span[contains(@class, 'executionStatus')]")).getText();
+            String status = lastExecution.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td//span[contains(@class, 'executionStatus')]")).getText(); //hang
             if (status.equals("ENDED")) {
                 String statusDistributionStr = lastExecution.findElement(By.xpath("./td//status-distribution/div")).getAttribute("uib-tooltip");
                 Pattern pattern = Pattern.compile(": (\\d+)");
@@ -138,10 +142,11 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Go to plans")
+    @Keyword(name = "Go to plans v13")
     public void goToPlans() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        driver.findElement(By.xpath("//a[@ng-click=\"setView('artefacts')\"]")).click();
+       // driver.findElement(By.xpath("//a[@ng-click=\"setView('artefacts')\"]")).click();
+        driver.findElement(By.linkText("Plans")).click();
 
         String plans = getPlans(driver);
         output.add("plans", plans);
@@ -150,17 +155,17 @@ public class DummyPlanExecution extends AbstractKeyword {
     }
 
 
-    @Keyword(name = "Remove plan by artifact id")
+    @Keyword(name = "Remove plan by artifact id v13")
     public void removePlanByExecId() {
         String artifactId = input.getString("artifactId");
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        String delButtonXPath = new StringBuilder()
-                .append("//button[@onclick=\"angular.element('#ArtefactListCtrl').scope().removeArtefact('")
-                .append(artifactId)
-                .append("')\"]")
-                .toString();
+//        String delButtonXPath = new StringBuilder()
+//                .append("//button[ng-click='$parent.deletePlan(")
+//                .append(artifactId)
+//                .append("')\"]")
+//                .toString();
 
-        driver.findElement(By.xpath(delButtonXPath)).click();
+        driver.findElement(By.xpath("//tr[1]//button[@ng-click='$parent.deletePlan(row.id)']")).click();
         driver.findElement(By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
         driver.navigate().refresh();
 
@@ -170,14 +175,14 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Logout from STEP")
-    public void logoutFromSTEP() throws InterruptedException {
-        WebDriver driver = session.get(DriverWrapper.class).driver;
-        driver.findElement(By.id("sessionDropdown")).click();
-        driver.findElement(By.xpath("//a[@ng-click='authService.logout()']")).click();
-        output.add("title", driver.getTitle());
-        attachScreenshot(driver);
-    }
+//    @Keyword(name = "Logout from STEP")
+//    public void logoutFromSTEP() throws InterruptedException {
+//        WebDriver driver = session.get(DriverWrapper.class).driver;
+//        driver.findElement(By.id("sessionDropdown")).click();
+//        driver.findElement(By.xpath("//a[@ng-click='authService.logout()']")).click();
+//        output.add("title", driver.getTitle());
+//        attachScreenshot(driver);
+//    }
 
     private String getPlans(WebDriver driver) {
         return driver.findElements(By.xpath("//table[@role='grid']/tbody/tr/td[@class='sorting_1']"))
