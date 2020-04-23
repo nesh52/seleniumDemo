@@ -8,7 +8,6 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import step.handlers.javahandler.AbstractKeyword;
 import step.handlers.javahandler.Keyword;
 
-import java.io.Closeable;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 

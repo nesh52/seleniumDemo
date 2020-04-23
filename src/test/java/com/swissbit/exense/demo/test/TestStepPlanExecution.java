@@ -75,7 +75,7 @@ public class TestStepPlanExecution {
         System.out.println("executionId: " + executionId);
         System.out.println("artifactId: " + artifactId);
 
-        // ----- Run plan ------
+        // ----- Close current execution tab ------
         String lastExecId = ctx.run("Close current execution tab", Json.createObjectBuilder()
                 .build()
                 .toString()

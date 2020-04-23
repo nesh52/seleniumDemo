@@ -112,9 +112,9 @@ public class StepKeywords extends AbstractKeyword {
                 String statusDistributionStr = driver.findElement(By.xpath(firstRowPath + "/td//status-distribution/div")).getAttribute("uib-tooltip");
                 Pattern pattern = Pattern.compile(": (\\d+)");
                 Matcher matcher = pattern.matcher(statusDistributionStr);
-                ArrayList<Integer> results = new ArrayList<>();
+                ArrayList<String> results = new ArrayList<>();
                 while (matcher.find()) {
-                    results.add(Integer.valueOf(matcher.group(1)));
+                    results.add(matcher.group(1));
                 }
                 output.add("passed", results.get(0));
                 output.add("failed", results.get(1));
@@ -133,8 +133,8 @@ public class StepKeywords extends AbstractKeyword {
     public void goToPlans() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.linkText("Plans")).click();
-        String plans = getPlans(driver);
-        output.add("plans", plans);
+//        String plans = getPlans(driver);
+        output.add("plans", "plans");
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -146,8 +146,8 @@ public class StepKeywords extends AbstractKeyword {
         driver.findElement(By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
 //        driver.navigate().refresh();
 
-        String plans = getPlans(driver);
-        output.add("plans", plans);
+//        String plans = getPlans(driver);
+        output.add("plans", "plans");
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -200,12 +200,14 @@ public class StepKeywords extends AbstractKeyword {
     }
 
     public void attachScreenshot(WebDriver driver) {
-        try {
-            byte[] bytes = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
-            Attachment attachment = AttachmentHelper.generateAttachmentFromByteArray(bytes, "screenshot.jpg");
-            output.addAttachment(attachment);
-        } catch (Exception ex) {
-            output.appendError("Unable to generate screenshot");
+        if (input.getBoolean("makeScreenshot", false)) {
+            try {
+                byte[] bytes = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+                Attachment attachment = AttachmentHelper.generateAttachmentFromByteArray(bytes, "screenshot.jpg");
+                output.addAttachment(attachment);
+            } catch (Exception ex) {
+                output.appendError("Unable to generate screenshot");
+            }
         }
     }
 
