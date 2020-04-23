@@ -133,8 +133,6 @@ public class StepKeywords extends AbstractKeyword {
     public void goToPlans() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.linkText("Plans")).click();
-//        String plans = getPlans(driver);
-        output.add("plans", "plans");
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -144,10 +142,6 @@ public class StepKeywords extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         removePlan(driver);
         driver.findElement(By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
-//        driver.navigate().refresh();
-
-//        String plans = getPlans(driver);
-        output.add("plans", "plans");
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -183,15 +177,6 @@ public class StepKeywords extends AbstractKeyword {
         driver.findElement(By.xpath("//a[@ng-click='authService.logout()']")).click();
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
-    }
-
-
-
-    private String getPlans(WebDriver driver) {
-        return driver.findElements(By.xpath("//table[@role='grid']/tbody/tr/td[@class='sorting_1']"))
-                .stream()
-                .map(e -> e.getText())
-                .collect(Collectors.joining("#"));
     }
 
     private void waitAndClick(WebDriver driver, int timeoutInSeconds, By by) {
