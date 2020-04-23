@@ -1,9 +1,9 @@
-package com.swissbit.exense.demo;
+package com.swissbit.exense.keywords;
 
+
+import com.swissbit.exense.utils.DriverWrapper;
+import dummyPlan.DummyPlanExecution;
 import org.openqa.selenium.*;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.CommandExecutor;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -12,40 +12,13 @@ import step.grid.io.AttachmentHelper;
 import step.handlers.javahandler.AbstractKeyword;
 import step.handlers.javahandler.Keyword;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class DummyPlanExecution extends AbstractKeyword {
-
-    @Keyword(name = "Open Chrome")
-    public void openChrome() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments(Arrays.asList("disable-infobars", "start-maximized"));
-        boolean headless = input.getBoolean("headless", false);
-        if (headless) {
-            options.addArguments(Arrays.asList("headless", "disable-gpu"));
-        }
-        boolean sandbox = input.getBoolean("sandbox", true);
-        if (!sandbox) {
-            options.addArguments(Arrays.asList("no-sandbox"));
-        }
-        if (input.containsKey("proxyHost") && input.containsKey("proxyPort")) {
-            String proxyHost = input.getString("proxyHost");
-            int proxyPort = input.getInt("proxyPort");
-            Proxy proxy = new Proxy();
-            proxy.setHttpProxy(proxyHost + ":" + proxyPort);
-            options.setCapability("proxy", proxy);
-        }
-        WebDriver driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-        session.put(new DriverWrapper(driver));
-    }
+public class StepKeywords extends AbstractKeyword {
 
     @Keyword(name = "Go to STEP")
     public void goToSTEP() {
@@ -74,31 +47,44 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    @Keyword(name = "Create plan")
-    public void createPlan() {
-        String planName = input.getString("planName");
-        String planType = input.getString("planType");
+    @Keyword(name = "Create and edit plan")
+    public void createAndEditPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        driver.findElement(By.xpath("//button[text()='New plan']")).click();
-        driver.findElement(By.id("attributes.name")).sendKeys(planName);
-        Select newPlanTypeDropdowns = new Select(driver.findElement(By.xpath("//select[@ng-model='artefacttype']")));
-        newPlanTypeDropdowns.selectByVisibleText(planType);
+        waitAndClick(driver, 10, By.xpath("//button[text()='New plan']"));
+        setPlanAttributes(driver);
         driver.findElement(By.xpath("//div[@class='modal-footer ng-scope']/button[text()='Save and edit']")).click();
-
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
+    }
+
+    private void setPlanAttributes(WebDriver driver) {
+        String planName = input.getString("planName");
+        String planType = input.getString("planType");
+        String stepVersion = input.getString("stepVersion");
+
+        switch (stepVersion.toLowerCase()) {
+            case "v3.10.0":
+                driver.findElement(By.id("attributes.name")).sendKeys(planName);
+                new Select(driver.findElement(By.xpath("//select[@ng-model='artefacttype']"))).selectByVisibleText(planType);
+                break;
+            case "v3.13.0":
+                driver.findElement(By.xpath("//input[@ng-if=\"input.type=='TEXT'\"]")).sendKeys(planName);
+                new Select(driver.findElement(By.xpath("//select[@ng-model='template']"))).selectByVisibleText(planType);
+                break;
+            default:
+                output.setError("Unsupported STEP version: " + stepVersion);
+        }
+
     }
 
     @Keyword(name = "Run plan")
     public void runPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        driver.findElement(By.xpath("//button[@title='Execute this plan']")).click();
-        WebDriverWait wait = new WebDriverWait(driver, 30);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//button/span[@class='glyphicon glyphicon glyphicon-play']")));
-        driver.findElement(By.xpath("//button/span[@class='glyphicon glyphicon glyphicon-play']")).click();
+        waitAndClick(driver, 10, By.xpath("//button[@title='Execute this plan']"));
+        waitAndClick(driver, 10, By.xpath("//button[@ng-click='execute(false)']"));
         String executionId = driver.findElement(By.xpath("//li[strong/text()='Execution ID']/span")).getText();
         String artifactIdRaw = driver.findElement(By.xpath("//li[strong/text()='Origin']/span[@class='ng-binding ng-scope']")).getText();
-        output.add("artifactId", artifactIdRaw.replaceFirst("^artefactid=", ""));
+        output.add("artifactId", artifactIdRaw.replaceFirst("^artefactid=|^planid=", ""));
         output.add("executionId", executionId);
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
@@ -108,7 +94,7 @@ public class DummyPlanExecution extends AbstractKeyword {
     public void closeCurrentExecutionTab() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//li[@class='ng-scope active']/a/i[@ng-click='closeTab(tab.id)']")).click();
-        String lastExecutionHref = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td/a")).getAttribute("href");
+        String lastExecutionHref = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td//a")).getAttribute("href");
         output.add("lastExecutionId", lastExecutionHref.substring(lastExecutionHref.lastIndexOf('/') + 1));
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
@@ -121,10 +107,10 @@ public class DummyPlanExecution extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         for (int i = 1; i <= pollMaxTries; i++) {
             Thread.sleep(pollIntervalMilliseconds);
-            WebElement lastExecution = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]"));
-            String status = lastExecution.findElement(By.xpath("./td/span[contains(@class, 'executionStatus')]")).getText();
+            String firstRowPath = "//table[@role='grid']/tbody/tr[1]";
+            String status = driver.findElement(By.xpath(firstRowPath + "/td//span[contains(@class, 'executionStatus')]")).getText();
             if (status.equals("ENDED")) {
-                String statusDistributionStr = lastExecution.findElement(By.xpath("./td//status-distribution/div")).getAttribute("uib-tooltip");
+                String statusDistributionStr = driver.findElement(By.xpath(firstRowPath + "/td//status-distribution/div")).getAttribute("uib-tooltip");
                 Pattern pattern = Pattern.compile(": (\\d+)");
                 Matcher matcher = pattern.matcher(statusDistributionStr);
                 ArrayList<Integer> results = new ArrayList<>();
@@ -147,7 +133,19 @@ public class DummyPlanExecution extends AbstractKeyword {
     @Keyword(name = "Go to plans")
     public void goToPlans() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        driver.findElement(By.xpath("//a[@ng-click=\"setView('artefacts')\"]")).click();
+        driver.findElement(By.linkText("Plans")).click();
+        String plans = getPlans(driver);
+        output.add("plans", plans);
+        output.add("title", driver.getTitle());
+        attachScreenshot(driver);
+    }
+
+    @Keyword(name = "Remove plan by artifact id")
+    public void removePlanByExecId() {
+        WebDriver driver = session.get(DriverWrapper.class).driver;
+        removePlan(driver);
+        driver.findElement(By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
+//        driver.navigate().refresh();
 
         String plans = getPlans(driver);
         output.add("plans", plans);
@@ -155,25 +153,28 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-
-    @Keyword(name = "Remove plan by artifact id")
-    public void removePlanByExecId() {
+    private void removePlan(WebDriver driver) {
         String artifactId = input.getString("artifactId");
-        WebDriver driver = session.get(DriverWrapper.class).driver;
-        String delButtonXPath = new StringBuilder()
-                .append("//button[@onclick=\"angular.element('#ArtefactListCtrl').scope().removeArtefact('")
-                .append(artifactId)
-                .append("')\"]")
-                .toString();
+        String stepVersion = input.getString("stepVersion");
 
-        driver.findElement(By.xpath(delButtonXPath)).click();
-        driver.findElement(By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
-        driver.navigate().refresh();
-
-        String plans = getPlans(driver);
-        output.add("plans", plans);
-        output.add("title", driver.getTitle());
-        attachScreenshot(driver);
+        StringBuilder delButtonXPath = new StringBuilder();
+        switch (stepVersion.toLowerCase()) {
+            case "v3.10.0":
+                delButtonXPath
+                        .append("//button[@onclick=\"angular.element('#ArtefactListCtrl').scope().removeArtefact('")
+                        .append(artifactId)
+                        .append("')\"]");
+                break;
+            case "v3.13.0":
+                delButtonXPath
+                        .append("//tr[td/cell/plan-link/a[contains(@href,'")
+                        .append(artifactId)
+                        .append("')]]/td//button[@uib-tooltip='Delete plan']");
+                break;
+            default:
+                output.setError("Unsupported STEP version: " + stepVersion);
+        }
+        driver.findElement(By.xpath(delButtonXPath.toString())).click();
     }
 
     @Keyword(name = "Logout from STEP")
@@ -185,11 +186,18 @@ public class DummyPlanExecution extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
+
+
     private String getPlans(WebDriver driver) {
         return driver.findElements(By.xpath("//table[@role='grid']/tbody/tr/td[@class='sorting_1']"))
                 .stream()
                 .map(e -> e.getText())
                 .collect(Collectors.joining("#"));
+    }
+
+    private void waitAndClick(WebDriver driver, int timeoutInSeconds, By by) {
+        new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
+                .until(ExpectedConditions.elementToBeClickable(by)).click();
     }
 
     public void attachScreenshot(WebDriver driver) {
@@ -199,20 +207,6 @@ public class DummyPlanExecution extends AbstractKeyword {
             output.addAttachment(attachment);
         } catch (Exception ex) {
             output.appendError("Unable to generate screenshot");
-        }
-    }
-
-    public class DriverWrapper implements Closeable {
-        final WebDriver driver;
-
-        public DriverWrapper(WebDriver driver) {
-            super();
-            this.driver = driver;
-        }
-
-        @Override
-        public void close() throws IOException {
-            driver.quit();
         }
     }
 
