@@ -2,7 +2,6 @@ package com.swissbit.exense.keywords;
 
 
 import com.swissbit.exense.utils.DriverWrapper;
-import dummyPlan.DummyPlanExecution;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
