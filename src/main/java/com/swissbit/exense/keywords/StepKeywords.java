@@ -1,6 +1,5 @@
 package com.swissbit.exense.keywords;
 
-
 import com.swissbit.exense.utils.DriverWrapper;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -15,9 +14,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class StepKeywords extends AbstractKeyword {
+
+    static final int EXPLICIT_WAIT_TIMEOUT_IN_SECONDS = 20;
 
     @Keyword(name = "Go to STEP")
     public void goToSTEP() {
@@ -34,14 +34,14 @@ public class StepKeywords extends AbstractKeyword {
         String password = input.getString("password");
         WebDriver driver = session.get(DriverWrapper.class).driver;
 
-        WebElement inputUsername = driver.findElement(By.name("username"));
-        WebElement inputPassword = driver.findElement(By.name("password"));
+        WebElement inputUsername = waitAndGetWebElement(driver, By.name("username"));
         inputUsername.clear();
         inputUsername.sendKeys(username);
+        WebElement inputPassword = waitAndGetWebElement(driver, By.name("password"));
         inputPassword.clear();
         inputPassword.sendKeys(password);
-        driver.findElement(By.xpath("//button[@type='submit']")).click();
 
+        driver.findElement(By.xpath("//button[@type='submit']")).click();
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -49,7 +49,7 @@ public class StepKeywords extends AbstractKeyword {
     @Keyword(name = "Create and edit plan")
     public void createAndEditPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        waitAndClick(driver, 10, By.xpath("//button[text()='New plan']"));
+        waitAndGetWebElement(driver, By.xpath("//button[text()='New plan']")).click();
         setPlanAttributes(driver);
         driver.findElement(By.xpath("//div[@class='modal-footer ng-scope']/button[text()='Save and edit']")).click();
         output.add("title", driver.getTitle());
@@ -63,26 +63,26 @@ public class StepKeywords extends AbstractKeyword {
 
         switch (stepVersion.toLowerCase()) {
             case "v3.10.0":
-                driver.findElement(By.id("attributes.name")).sendKeys(planName);
-                new Select(driver.findElement(By.xpath("//select[@ng-model='artefacttype']"))).selectByVisibleText(planType);
+                waitAndGetWebElement(driver, By.id("attributes.name")).sendKeys(planName);
+                new Select(waitAndGetWebElement(driver, By.xpath("//select[@ng-model='artefacttype']"))).selectByVisibleText(planType);
                 break;
             case "v3.13.0":
-                driver.findElement(By.xpath("//input[@ng-if=\"input.type=='TEXT'\"]")).sendKeys(planName);
-                new Select(driver.findElement(By.xpath("//select[@ng-model='template']"))).selectByVisibleText(planType);
+                waitAndGetWebElement(driver, By.xpath("//input[@ng-if=\"input.type=='TEXT'\"]")).sendKeys(planName);
+                WebElement selectPlanType = waitAndGetWebElement(driver, By.xpath("//select[@ng-model='template']"));
+                new Select(selectPlanType).selectByVisibleText(planType);
                 break;
             default:
                 output.setError("Unsupported STEP version: " + stepVersion);
         }
-
     }
 
     @Keyword(name = "Run plan")
     public void runPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        waitAndClick(driver, 10, By.xpath("//button[@title='Execute this plan']"));
-        waitAndClick(driver, 10, By.xpath("//button[@ng-click='execute(false)']"));
-        String executionId = driver.findElement(By.xpath("//li[strong/text()='Execution ID']/span")).getText();
-        String artifactIdRaw = driver.findElement(By.xpath("//li[strong/text()='Origin']/span[@class='ng-binding ng-scope']")).getText();
+        waitAndGetWebElement(driver, By.xpath("//button[@title='Execute this plan']")).click();
+        waitAndGetWebElement(driver, By.xpath("//button[@ng-click='execute(false)']")).click();
+        String executionId = waitAndGetWebElement(driver, By.xpath("//li[strong/text()='Execution ID']/span")).getText();
+        String artifactIdRaw = waitAndGetWebElement(driver, By.xpath("//li[strong/text()='Origin']/span[@class='ng-binding ng-scope']")).getText();
         output.add("artifactId", artifactIdRaw.replaceFirst("^artefactid=|^planid=", ""));
         output.add("executionId", executionId);
         output.add("title", driver.getTitle());
@@ -140,8 +140,10 @@ public class StepKeywords extends AbstractKeyword {
     @Keyword(name = "Remove plan by artifact id")
     public void removePlanByExecId() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
+        // alternative would be to remove all created dummy plans from MongoDB
+        // db.plans.remove( { "attributes.name" : "dummy1"  } )
         removePlan(driver);
-        driver.findElement(By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
+        confirmRemovePlan(driver);
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -160,14 +162,32 @@ public class StepKeywords extends AbstractKeyword {
                 break;
             case "v3.13.0":
                 delButtonXPath
-                        .append("//tr[td/cell/plan-link/a[contains(@href,'")
+                        .append("//tr[td/cell/plan-link/a[@href='#/root/plans/editor/")
                         .append(artifactId)
-                        .append("')]]/td//button[@uib-tooltip='Delete plan']");
+                        .append("']]/td//button[@uib-tooltip='Delete plan']");
                 break;
             default:
                 output.setError("Unsupported STEP version: " + stepVersion);
         }
-        driver.findElement(By.xpath(delButtonXPath.toString())).click();
+
+        boolean staleElement = true;
+        while(staleElement) {
+            try{
+                waitAndGetWebElement(driver, By.xpath(delButtonXPath.toString())).click();
+                staleElement = false;
+            } catch(StaleElementReferenceException e){
+                staleElement = true;
+            }
+        }
+    }
+
+    private void confirmRemovePlan(WebDriver driver) {
+        try {
+            waitAndGetWebElement(driver, By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).click();
+        } catch (Exception e) {
+            output.setError("failed confirming delete plan");
+            output.addAttachment(AttachmentHelper.generateAttachmentForException(e));
+        }
     }
 
     @Keyword(name = "Logout from STEP")
@@ -179,12 +199,7 @@ public class StepKeywords extends AbstractKeyword {
         attachScreenshot(driver);
     }
 
-    private void waitAndClick(WebDriver driver, int timeoutInSeconds, By by) {
-        new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
-                .until(ExpectedConditions.elementToBeClickable(by)).click();
-    }
-
-    public void attachScreenshot(WebDriver driver) {
+    private void attachScreenshot(WebDriver driver) {
         if (input.getBoolean("makeScreenshot", false)) {
             try {
                 byte[] bytes = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
@@ -194,6 +209,15 @@ public class StepKeywords extends AbstractKeyword {
                 output.appendError("Unable to generate screenshot");
             }
         }
+    }
+
+    private WebElement waitAndGetWebElement(WebDriver driver, By by) {
+        return waitAndGetWebElement(driver, by, EXPLICIT_WAIT_TIMEOUT_IN_SECONDS);
+    }
+
+    private WebElement waitAndGetWebElement(WebDriver driver, By by, int timeoutInSeconds) {
+        return new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
+                .until(ExpectedConditions.elementToBeClickable(by));
     }
 
 }

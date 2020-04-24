@@ -34,8 +34,8 @@ public class TestStepPlanExecution {
         ctx.run("Open Chrome", Json.createObjectBuilder()
 //                .add("proxyHost", "127.0.0.1")
 //                .add("proxyPort", 8888)
-                .build()
-                .toString()
+                        .build()
+                        .toString()
         );
 
         // ----- Go to STEP ------
@@ -90,15 +90,15 @@ public class TestStepPlanExecution {
                 .build()
                 .toString()
         ).getPayload();
-        int pass = execStatus.getInt("passed");
-        int fail = execStatus.getInt("failed");
-        int error = execStatus.getInt("technicalError");
+        String pass = execStatus.getString("passed");
+        String fail = execStatus.getString("failed");
+        String error = execStatus.getString("technicalError");
         System.out.println("pass: " + pass);
         System.out.println("fail: " + fail);
         System.out.println("error: " + error);
-        Assert.assertEquals(0, pass);
-        Assert.assertEquals(0, fail);
-        Assert.assertEquals(0, error);
+        Assert.assertEquals("0", pass);
+        Assert.assertEquals("0", fail);
+        Assert.assertEquals("0", error);
 
         // ----- Go to plans ------
         JsonObject plansGrid = ctx.run("Go to plans", Json.createObjectBuilder()
@@ -106,16 +106,14 @@ public class TestStepPlanExecution {
                 .toString()
         ).getPayload();
         Assert.assertEquals("STEP", plansGrid.getString("title"));
-        System.out.println("list of plan names: " + plansGrid.getString("plans"));
 
         // ----- Remove plan by artifact id ------
-        String plansAfterRemove = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
+        ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
                 .add("artifactId", artifactId)
                 .add("stepVersion", stepVersion)
                 .build()
                 .toString()
-        ).getPayload().getString("plans");
-        System.out.println("plan names after remove: " + plansAfterRemove);
+        );
 
         // ----- Logout from STEP ------
         String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
@@ -136,6 +134,5 @@ public class TestStepPlanExecution {
     public static void tearDown() {
         ctx.close();
     }
-
 
 }

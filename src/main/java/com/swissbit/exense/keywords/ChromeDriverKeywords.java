@@ -9,7 +9,6 @@ import step.handlers.javahandler.AbstractKeyword;
 import step.handlers.javahandler.Keyword;
 
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 public class ChromeDriverKeywords extends AbstractKeyword {
 
@@ -21,7 +20,6 @@ public class ChromeDriverKeywords extends AbstractKeyword {
         setSandbox(options);
         setProxy(options);
         ChromeDriver driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
         session.put(new DriverWrapper(driver));
     }
 
