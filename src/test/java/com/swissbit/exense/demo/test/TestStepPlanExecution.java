@@ -52,8 +52,8 @@ public class TestStepPlanExecution {
                 .add("password", password)
                 .build()
                 .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", loginTitle);
+        ).getPayload().getString("name");
+        Assert.assertEquals("Login", loginTitle);
 
         // ----- Create and edit STEP plan ------
         String titleAfterCreate = ctx.run("Create and edit plan", Json.createObjectBuilder()
@@ -62,8 +62,8 @@ public class TestStepPlanExecution {
                 .add("stepVersion", stepVersion)
                 .build()
                 .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", titleAfterCreate);
+        ).getPayload().getString("plan");
+        Assert.assertEquals("Plans", titleAfterCreate);
 
         // ----- Run plan ------
         JsonObject planDetails = ctx.run("Run plan", Json.createObjectBuilder()
@@ -72,6 +72,8 @@ public class TestStepPlanExecution {
         ).getPayload();
         String executionId = planDetails.getString("executionId");
         String artifactId = planDetails.getString("artifactId");
+        String exec = planDetails.getString("exec");
+        Assert.assertEquals("Executions", exec);
         System.out.println("executionId: " + executionId);
         System.out.println("artifactId: " + artifactId);
 
@@ -93,34 +95,40 @@ public class TestStepPlanExecution {
         String pass = execStatus.getString("passed");
         String fail = execStatus.getString("failed");
         String error = execStatus.getString("technicalError");
+        String tab = execStatus.getString("tab");
         System.out.println("pass: " + pass);
         System.out.println("fail: " + fail);
         System.out.println("error: " + error);
         Assert.assertEquals("0", pass);
         Assert.assertEquals("0", fail);
         Assert.assertEquals("0", error);
+        Assert.assertEquals("Execution list", tab);
 
         // ----- Go to plans ------
         JsonObject plansGrid = ctx.run("Go to plans", Json.createObjectBuilder()
                 .build()
                 .toString()
         ).getPayload();
-        Assert.assertEquals("STEP", plansGrid.getString("title"));
+        String plan = plansGrid.getString("plan");
+
+        Assert.assertEquals("Plans", plan);
 
         // ----- Remove plan by artifact id ------
-        ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
+       JsonObject remove = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
                 .add("artifactId", artifactId)
                 .add("stepVersion", stepVersion)
                 .build()
                 .toString()
-        );
+        ).getPayload();
+       String keywords = remove.getString("keywords");
+        Assert.assertEquals("Keywords", keywords);
 
         // ----- Logout from STEP ------
         String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
                 .build()
                 .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", logoutTitle);
+        ).getPayload().getString("logout");
+        Assert.assertEquals("Login", logoutTitle);
     }
 
     private static Stream<Arguments> provideStepVersions() {

@@ -41,8 +41,11 @@ public class StepKeywords extends AbstractKeyword {
         inputPassword.clear();
         inputPassword.sendKeys(password);
 
+        String form  = driver.findElement(By.name("loginForm")).getText();
+
         driver.findElement(By.xpath("//button[@type='submit']")).click();
-        output.add("title", driver.getTitle());
+//        output.add("title", driver.getTitle());
+        output.add("name", form);
         attachScreenshot(driver);
     }
 
@@ -52,7 +55,10 @@ public class StepKeywords extends AbstractKeyword {
         waitAndGetWebElement(driver, By.xpath("//button[text()='New plan']")).click();
         setPlanAttributes(driver);
         driver.findElement(By.xpath("//div[@class='modal-footer ng-scope']/button[text()='Save and edit']")).click();
-        output.add("title", driver.getTitle());
+
+        String plans = driver.findElement(By.linkText("Plans")).getText();
+        output.add("plan", plans);
+//        output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -60,6 +66,7 @@ public class StepKeywords extends AbstractKeyword {
         String planName = input.getString("planName");
         String planType = input.getString("planType");
         String stepVersion = input.getString("stepVersion");
+
 
         switch (stepVersion.toLowerCase()) {
             case "v3.10.0":
@@ -83,9 +90,11 @@ public class StepKeywords extends AbstractKeyword {
         waitAndGetWebElement(driver, By.xpath("//button[@ng-click='execute(false)']")).click();
         String executionId = waitAndGetWebElement(driver, By.xpath("//li[strong/text()='Execution ID']/span")).getText();
         String artifactIdRaw = waitAndGetWebElement(driver, By.xpath("//li[strong/text()='Origin']/span[@class='ng-binding ng-scope']")).getText();
+        String exec = driver.findElement(By.linkText("Executions")).getText();
+        output.add("exec", exec);
         output.add("artifactId", artifactIdRaw.replaceFirst("^artefactid=|^planid=", ""));
         output.add("executionId", executionId);
-        output.add("title", driver.getTitle());
+//        output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -93,7 +102,7 @@ public class StepKeywords extends AbstractKeyword {
     public void closeCurrentExecutionTab() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//li[@class='ng-scope active']/a/i[@ng-click='closeTab(tab.id)']")).click();
-        String lastExecutionHref = driver.findElement(By.xpath("//table[@role='grid']/tbody/tr[1]/td//a")).getAttribute("href");
+        String lastExecutionHref = waitAndGetWebElement(driver, By.xpath("//table[@role='grid']/tbody/tr[1]/td//a")).getAttribute("href");
         output.add("lastExecutionId", lastExecutionHref.substring(lastExecutionHref.lastIndexOf('/') + 1));
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
@@ -125,7 +134,9 @@ public class StepKeywords extends AbstractKeyword {
                 output.setBusinessError("execution is not finished after polling " + pollMaxTries + " times and interval " + pollIntervalMilliseconds + " milliseconds");
             }
         }
-        output.add("title", driver.getTitle());
+        String tab = driver.findElement(By.xpath("//li[@class='ng-scope active']/a")).getText();
+        output.add("tab", tab);
+       // output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -133,7 +144,9 @@ public class StepKeywords extends AbstractKeyword {
     public void goToPlans() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.linkText("Plans")).click();
-        output.add("title", driver.getTitle());
+        String plans = driver.findElement(By.linkText("Plans")).getText();
+        output.add("plan", plans);
+       // output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
 
@@ -144,6 +157,8 @@ public class StepKeywords extends AbstractKeyword {
         // db.plans.remove( { "attributes.name" : "dummy1"  } )
         removePlan(driver);
         confirmRemovePlan(driver);
+        String keywords = driver.findElement(By.linkText("Keywords")).getText();
+        output.add("keywords", keywords);
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -195,7 +210,8 @@ public class StepKeywords extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.id("sessionDropdown")).click();
         driver.findElement(By.xpath("//a[@ng-click='authService.logout()']")).click();
-        output.add("title", driver.getTitle());
+        String form  = waitAndGetWebElement(driver, (By.name("loginForm"))).getText();
+        output.add("logout", form);
         attachScreenshot(driver);
     }
 
