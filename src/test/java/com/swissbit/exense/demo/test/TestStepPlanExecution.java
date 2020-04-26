@@ -39,42 +39,42 @@ public class TestStepPlanExecution {
         );
 
         // ----- Go to STEP ------
-        String lendingTitle = ctx.run("Go to STEP", Json.createObjectBuilder()
+        String isLoginButtonPresent = ctx.run("Go to STEP", Json.createObjectBuilder()
                 .add("url", stepUrl)
                 .build()
                 .toString()
-        ).getPayload().getString("title");
-        Assert.assertEquals("STEP", lendingTitle);
+        ).getPayload().getString("isLoginButtonPresent");
+        Assert.assertTrue(Boolean.valueOf(isLoginButtonPresent));
 
         // ----- Login to STEP ------
-        String loginTitle = ctx.run("Login to STEP", Json.createObjectBuilder()
+        String isNewPlanButtonPresent = ctx.run("Login to STEP", Json.createObjectBuilder()
                 .add("username", username)
                 .add("password", password)
                 .build()
                 .toString()
-
-        ).getPayload().getString("btnName");
-        Assert.assertEquals("Login", loginTitle);
+        ).getPayload().getString("isNewPlanButtonPresent");
+        Assert.assertTrue(Boolean.valueOf(isNewPlanButtonPresent));
 
         // ----- Create and edit STEP plan ------
-        String titleAfterCreate = ctx.run("Create and edit plan", Json.createObjectBuilder()
+        JsonObject createAndEditPayload = ctx.run("Create and edit plan", Json.createObjectBuilder()
                 .add("planName", "dummy1")
                 .add("planType", "Sequence") // "Sequence", "TestScenario", "Echo"
                 .add("stepVersion", stepVersion)
                 .build()
                 .toString()
-        ).getPayload().getString("newPlanBtnName");
-        Assert.assertEquals("New plan", titleAfterCreate);
+        ).getPayload();
+        Assert.assertTrue(Boolean.valueOf(createAndEditPayload.getString("isNewPlanDialogPresent")));
+        Assert.assertTrue(Boolean.valueOf(createAndEditPayload.getString("isExecutePlanButtonPresent")));
 
         // ----- Run plan ------
         JsonObject planDetails = ctx.run("Run plan", Json.createObjectBuilder()
                 .build()
                 .toString()
         ).getPayload();
+        Assert.assertTrue(Boolean.valueOf(planDetails.getString("isExecutionConfirmationPresent")));
+        Assert.assertTrue(Boolean.valueOf(planDetails.getString("isExecutionDetailPresent")));
         String executionId = planDetails.getString("executionId");
         String artifactId = planDetails.getString("artifactId");
-        String executeBtnTitle = planDetails.getString("executeBtnTitle");
-        Assert.assertEquals("Execute this plan", executeBtnTitle);
         System.out.println("executionId: " + executionId);
         System.out.println("artifactId: " + artifactId);
 
@@ -83,12 +83,9 @@ public class TestStepPlanExecution {
                 .build()
                 .toString()
         ).getPayload();
-        String lastExecId = lastExec.getString("lastExecutionId");
-        boolean isInList = lastExec.getBoolean("isInList");
-        System.out.println("lastExecId: " + lastExecId);
-        System.out.println("isInList: " + isInList);
-        Assert.assertEquals(executionId, lastExecId);
-        Assert.assertTrue("is not in List: ",isInList);
+        String lastExecutions = lastExec.getString("lastExecutions");
+        System.out.println("lastExecutions: " + lastExecutions);
+        Assert.assertTrue(lastExecutions.contains(executionId));
 
         // ----- Wait for execution to end ------
         JsonObject execStatus = ctx.run("Wait for execution to end", Json.createObjectBuilder()
@@ -100,7 +97,6 @@ public class TestStepPlanExecution {
         String pass = execStatus.getString("passed");
         String fail = execStatus.getString("failed");
         String error = execStatus.getString("technicalError");
-
         System.out.println("pass: " + pass);
         System.out.println("fail: " + fail);
         System.out.println("error: " + error);
@@ -108,31 +104,29 @@ public class TestStepPlanExecution {
         Assert.assertEquals("0", fail);
         Assert.assertEquals("0", error);
 
-
         // ----- Go to plans ------
-        JsonObject plansGrid = ctx.run("Go to plans", Json.createObjectBuilder()
+        String isNewPlanButtonPresentHome = ctx.run("Go to plans", Json.createObjectBuilder()
                 .build()
                 .toString()
-        ).getPayload();
-        String tab = plansGrid.getString("tab");
-        Assert.assertEquals("Execution list", tab);
+        ).getPayload().getString("isNewPlanButtonPresent");
+        Assert.assertTrue(Boolean.valueOf(isNewPlanButtonPresentHome));
 
         // ----- Remove plan by artifact id ------
-       JsonObject remove = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
+       JsonObject removePlanPayload = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
                 .add("artifactId", artifactId)
                 .add("stepVersion", stepVersion)
                 .build()
                 .toString()
         ).getPayload();
-       String yesBtnName = remove.getString("yesBtnName");
-        Assert.assertEquals("Yes", yesBtnName);
+       Assert.assertTrue(Boolean.valueOf(removePlanPayload.getString("isDeleteWarningPresent")));
+       Assert.assertFalse(Boolean.valueOf(removePlanPayload.getString("isRemovedPlanPresent")));
 
         // ----- Logout from STEP ------
-        String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
+        String isLoginButtonPresentLogout = ctx.run("Logout from STEP", Json.createObjectBuilder()
                 .build()
                 .toString()
-        ).getPayload().getString("btnName");
-        Assert.assertEquals("Login", logoutTitle);
+        ).getPayload().getString("isLoginButtonPresent");
+        Assert.assertTrue(Boolean.valueOf(isLoginButtonPresentLogout));
     }
 
     private static Stream<Arguments> provideStepVersions() {
