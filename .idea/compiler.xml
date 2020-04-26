@@ -7,8 +7,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="dummyplan" />
-        <module name="seleniumDemo" />
         <module name="SeleniumDemoExense" />
+        <module name="seleniumDemo" />
       </profile>
     </annotationProcessing>
   </component>

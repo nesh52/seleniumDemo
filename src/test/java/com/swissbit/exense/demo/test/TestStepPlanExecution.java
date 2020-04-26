@@ -52,7 +52,8 @@ public class TestStepPlanExecution {
                 .add("password", password)
                 .build()
                 .toString()
-        ).getPayload().getString("name");
+
+        ).getPayload().getString("btnName");
         Assert.assertEquals("Login", loginTitle);
 
         // ----- Create and edit STEP plan ------
@@ -62,8 +63,8 @@ public class TestStepPlanExecution {
                 .add("stepVersion", stepVersion)
                 .build()
                 .toString()
-        ).getPayload().getString("plan");
-        Assert.assertEquals("Plans", titleAfterCreate);
+        ).getPayload().getString("newPlanBtnName");
+        Assert.assertEquals("New plan", titleAfterCreate);
 
         // ----- Run plan ------
         JsonObject planDetails = ctx.run("Run plan", Json.createObjectBuilder()
@@ -72,18 +73,22 @@ public class TestStepPlanExecution {
         ).getPayload();
         String executionId = planDetails.getString("executionId");
         String artifactId = planDetails.getString("artifactId");
-        String exec = planDetails.getString("exec");
-        Assert.assertEquals("Executions", exec);
+        String executeBtnTitle = planDetails.getString("executeBtnTitle");
+        Assert.assertEquals("Execute this plan", executeBtnTitle);
         System.out.println("executionId: " + executionId);
         System.out.println("artifactId: " + artifactId);
 
         // ----- Close current execution tab ------
-        String lastExecId = ctx.run("Close current execution tab", Json.createObjectBuilder()
+        JsonObject lastExec = ctx.run("Close current execution tab", Json.createObjectBuilder()
                 .build()
                 .toString()
-        ).getPayload().getString("lastExecutionId");
+        ).getPayload();
+        String lastExecId = lastExec.getString("lastExecutionId");
+        boolean isInList = lastExec.getBoolean("isInList");
         System.out.println("lastExecId: " + lastExecId);
+        System.out.println("isInList: " + isInList);
         Assert.assertEquals(executionId, lastExecId);
+        Assert.assertTrue("is not in List: ",isInList);
 
         // ----- Wait for execution to end ------
         JsonObject execStatus = ctx.run("Wait for execution to end", Json.createObjectBuilder()
@@ -95,23 +100,22 @@ public class TestStepPlanExecution {
         String pass = execStatus.getString("passed");
         String fail = execStatus.getString("failed");
         String error = execStatus.getString("technicalError");
-        String tab = execStatus.getString("tab");
+
         System.out.println("pass: " + pass);
         System.out.println("fail: " + fail);
         System.out.println("error: " + error);
         Assert.assertEquals("0", pass);
         Assert.assertEquals("0", fail);
         Assert.assertEquals("0", error);
-        Assert.assertEquals("Execution list", tab);
+
 
         // ----- Go to plans ------
         JsonObject plansGrid = ctx.run("Go to plans", Json.createObjectBuilder()
                 .build()
                 .toString()
         ).getPayload();
-        String plan = plansGrid.getString("plan");
-
-        Assert.assertEquals("Plans", plan);
+        String tab = plansGrid.getString("tab");
+        Assert.assertEquals("Execution list", tab);
 
         // ----- Remove plan by artifact id ------
        JsonObject remove = ctx.run("Remove plan by artifact id", Json.createObjectBuilder()
@@ -120,14 +124,14 @@ public class TestStepPlanExecution {
                 .build()
                 .toString()
         ).getPayload();
-       String keywords = remove.getString("keywords");
-        Assert.assertEquals("Keywords", keywords);
+       String yesBtnName = remove.getString("yesBtnName");
+        Assert.assertEquals("Yes", yesBtnName);
 
         // ----- Logout from STEP ------
         String logoutTitle = ctx.run("Logout from STEP", Json.createObjectBuilder()
                 .build()
                 .toString()
-        ).getPayload().getString("logout");
+        ).getPayload().getString("btnName");
         Assert.assertEquals("Login", logoutTitle);
     }
 

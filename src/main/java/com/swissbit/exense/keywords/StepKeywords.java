@@ -12,8 +12,11 @@ import step.handlers.javahandler.Keyword;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 
 public class StepKeywords extends AbstractKeyword {
 
@@ -41,24 +44,23 @@ public class StepKeywords extends AbstractKeyword {
         inputPassword.clear();
         inputPassword.sendKeys(password);
 
-        String form  = driver.findElement(By.name("loginForm")).getText();
-
+        String loginBtnName  = driver.findElement(By.xpath("//button[@type='submit']")).getText();
         driver.findElement(By.xpath("//button[@type='submit']")).click();
 //        output.add("title", driver.getTitle());
-        output.add("name", form);
+        output.add("btnName", loginBtnName);
         attachScreenshot(driver);
     }
 
     @Keyword(name = "Create and edit plan")
     public void createAndEditPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        waitAndGetWebElement(driver, By.xpath("//button[text()='New plan']")).click();
+        WebElement newPlanBtn = waitAndGetWebElement(driver, By.xpath("//button[text()='New plan']"));
+        String newPlanBtnName = newPlanBtn.getText();
+        newPlanBtn.click();
         setPlanAttributes(driver);
         driver.findElement(By.xpath("//div[@class='modal-footer ng-scope']/button[text()='Save and edit']")).click();
 
-        String plans = driver.findElement(By.linkText("Plans")).getText();
-        output.add("plan", plans);
-//        output.add("title", driver.getTitle());
+        output.add("newPlanBtnName", newPlanBtnName);
         attachScreenshot(driver);
     }
 
@@ -86,12 +88,14 @@ public class StepKeywords extends AbstractKeyword {
     @Keyword(name = "Run plan")
     public void runPlan() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
-        waitAndGetWebElement(driver, By.xpath("//button[@title='Execute this plan']")).click();
+        WebElement executeBtn = waitAndGetWebElement(driver, By.xpath("//button[@title='Execute this plan']"));
+        executeBtn.click();
+        String executeBtnTitle = executeBtn.getAttribute("title");
         waitAndGetWebElement(driver, By.xpath("//button[@ng-click='execute(false)']")).click();
         String executionId = waitAndGetWebElement(driver, By.xpath("//li[strong/text()='Execution ID']/span")).getText();
         String artifactIdRaw = waitAndGetWebElement(driver, By.xpath("//li[strong/text()='Origin']/span[@class='ng-binding ng-scope']")).getText();
-        String exec = driver.findElement(By.linkText("Executions")).getText();
-        output.add("exec", exec);
+
+        output.add("executeBtnTitle", executeBtnTitle);
         output.add("artifactId", artifactIdRaw.replaceFirst("^artefactid=|^planid=", ""));
         output.add("executionId", executionId);
 //        output.add("title", driver.getTitle());
@@ -103,8 +107,13 @@ public class StepKeywords extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.xpath("//li[@class='ng-scope active']/a/i[@ng-click='closeTab(tab.id)']")).click();
         String lastExecutionHref = waitAndGetWebElement(driver, By.xpath("//table[@role='grid']/tbody/tr[1]/td//a")).getAttribute("href");
+
+        boolean isInList = driver.findElements(By.xpath("//table[@role='grid']/tbody/tr/td//a")).stream()
+                .filter( e -> e.getAttribute("href").equals(lastExecutionHref))
+                .count() == 1;
         output.add("lastExecutionId", lastExecutionHref.substring(lastExecutionHref.lastIndexOf('/') + 1));
         output.add("title", driver.getTitle());
+        output.add("isInList", isInList);
         attachScreenshot(driver);
     }
 
@@ -134,8 +143,6 @@ public class StepKeywords extends AbstractKeyword {
                 output.setBusinessError("execution is not finished after polling " + pollMaxTries + " times and interval " + pollIntervalMilliseconds + " milliseconds");
             }
         }
-        String tab = driver.findElement(By.xpath("//li[@class='ng-scope active']/a")).getText();
-        output.add("tab", tab);
        // output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -143,10 +150,10 @@ public class StepKeywords extends AbstractKeyword {
     @Keyword(name = "Go to plans")
     public void goToPlans() {
         WebDriver driver = session.get(DriverWrapper.class).driver;
+        String tab = driver.findElement(By.xpath("//li[@class='ng-scope active']/a")).getText();
+        output.add("tab", tab);
         driver.findElement(By.linkText("Plans")).click();
-        String plans = driver.findElement(By.linkText("Plans")).getText();
-        output.add("plan", plans);
-       // output.add("title", driver.getTitle());
+
         attachScreenshot(driver);
     }
 
@@ -156,9 +163,9 @@ public class StepKeywords extends AbstractKeyword {
         // alternative would be to remove all created dummy plans from MongoDB
         // db.plans.remove( { "attributes.name" : "dummy1"  } )
         removePlan(driver);
+        String yesBtnName = waitAndGetWebElement(driver, By.xpath("//form[@name='ConfirmationDialog']/div[@class='modal-footer']/button[text()='Yes']")).getText();
         confirmRemovePlan(driver);
-        String keywords = driver.findElement(By.linkText("Keywords")).getText();
-        output.add("keywords", keywords);
+        output.add("yesBtnName", yesBtnName);
         output.add("title", driver.getTitle());
         attachScreenshot(driver);
     }
@@ -210,8 +217,9 @@ public class StepKeywords extends AbstractKeyword {
         WebDriver driver = session.get(DriverWrapper.class).driver;
         driver.findElement(By.id("sessionDropdown")).click();
         driver.findElement(By.xpath("//a[@ng-click='authService.logout()']")).click();
-        String form  = waitAndGetWebElement(driver, (By.name("loginForm"))).getText();
-        output.add("logout", form);
+        String loginBtnName  = waitAndGetWebElement(driver, By.xpath("//button[@type='submit']")).getText();
+        //String loginBtnName = driver.findElement(By.tagName("img")).getTagName();
+        output.add("btnName", loginBtnName);
         attachScreenshot(driver);
     }
 
